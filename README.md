@@ -4,8 +4,8 @@ A project, to be able to start working with microservices, using laravel rabbitm
 
 Before we start, remember to download my other two repositories microservice1 and microservice2, and put them on the same level as this one.
 link:
-https://gitlab.com/pgongora/microservice1
-https://gitlab.com/pgongora/microservice2
+https://github.com/pegons/microservice1
+https://github.com/pegons/microservice2
 ## Getting started
 
 - Once the three repos are at the same level, enter DDD_laravel_rabbitmq_template and execute:
