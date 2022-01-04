@@ -1,0 +1,189 @@
+version: '3.4'
+networks:
+  main:
+    driver: bridge
+  keycloak:
+  kong:
+volumes:
+  kong-datastore:
+  keycloak-datastore:
+services:
+
+  ## RABBITMQ.
+  rabbit:
+    image: 'rabbitmq:3.7-management'
+    container_name: rabbit
+    restart: unless-stopped
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - main
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+
+  main_db:
+    image: mysql:5.7.22
+    container_name: mainDB
+    environment:
+      MYSQL_DATABASE: mainDB
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - main
+    ports:
+      - 33066:3306
+
+   ## MICROSERVICE1
+  microservice1:
+    build:
+      context: .
+      dockerfile: ./microservice1/Dockerfile
+    container_name: microservice1
+    hostname: microservice1
+    command: bash -c "composer install && php artisan rabbitmq:queue-declare microservice1_queue && php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - 7001:8000
+    depends_on:
+      - rabbit
+      - main_db
+    restart: on-failure
+    links:
+      - rabbit
+    volumes:
+      - ../microservice1:/microservice1
+    networks:
+      - main
+      - kong
+
+  ## MICROSERVICE2
+  microservice2:
+    build:
+      context: .
+      dockerfile: ./microservice2/Dockerfile
+    container_name: microservice2
+    hostname: microservice2
+    command: bash -c "composer install && php artisan rabbitmq:queue-declare microservice2_queue && php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - 7002:8000
+    depends_on:
+      - rabbit
+      - main_db
+    restart: on-failure
+    links:
+      - rabbit
+    volumes:
+      - ../microservice2:/microservice2
+    networks:
+      - main
+      - kong
+
+ ## KONG-DB.
+  kong-db:
+    image: postgres:9.6
+    volumes:
+      - kong-datastore:/var/lib/postgresql/data
+    networks:
+      - kong
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB:       api-gw
+      POSTGRES_USER:     kong
+      POSTGRES_PASSWORD: kong
+
+## KONG
+  kong:
+    build:
+      context: ./
+    image: kong-oidc:latest
+    command: bash -c "kong migrations bootstrap && kong migrations up && kong migrations finish && kong start"
+    depends_on:
+      - kong-db
+    restart: always
+    networks:
+      - kong
+    ports:
+      - "8000:8000" # Listener
+      - "8001:8001" # Admin API
+      - "8443:8443" # Listener  (SSL)
+      - "8444:8444" # Admin API (SSL)
+    environment:
+      KONG_DATABASE:         postgres
+      KONG_PG_HOST:          kong-db
+      KONG_PG_PORT:          5432
+      KONG_PG_DATABASE:      api-gw
+      KONG_PG_USER:          kong
+      KONG_PG_PASSWORD:      kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG:  /dev/stderr
+      KONG_ADMIN_ERROR_LOG:  /dev/stderr
+      KONG_PROXY_LISTEN:     0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_ADMIN_LISTEN:     0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_PLUGINS:          bundled,oidc
+      KONG_LOG_LEVEL:        debug
+
+## KONGA
+  konga:
+    image: pantsel/konga:0.14.9
+    depends_on:
+      - kong
+    networks:
+      - kong
+    ports:
+      - "1337:1337" # konga
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: kong-db
+      DB_PORT: '5432'
+      DB_USER: kong
+      DB_PASSWORD: kong
+      DB_DATABASE: api-gw
+      NODE_ENV: development
+
+## KEYCLOAK
+  keycloak-db:
+    image: postgres:9.6
+    volumes:
+      - keycloak-datastore:/var/lib/postgresql/data
+    networks:
+      - main
+      - keycloak
+    ports:
+      - "25432:5432"
+    environment:
+      POSTGRES_DB:       keycloak
+      POSTGRES_USER:     keycloak
+      POSTGRES_PASSWORD: password
+
+## KEYCLOAK
+  keycloak:
+    image: jboss/keycloak:12.0.4
+    hostname: keycloak
+    container_name: keycloak
+    depends_on:
+      - keycloak-db
+    networks:
+      - keycloak
+      - kong
+    ports:
+      - "8180:8080"
+    environment:
+      DB_VENDOR:   POSTGRES
+      DB_ADDR:     keycloak-db
+      DB_PORT:     5432
+      DB_DATABASE: keycloak
+      DB_USER:     keycloak
+      DB_PASSWORD: password
+      KEYCLOAK_USER:     admin
+      KEYCLOAK_PASSWORD: admin
