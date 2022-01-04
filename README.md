@@ -36,36 +36,36 @@ We are going to create two clients:
     -A client that will be used by Kong, through the OIDC plugin
     -Another client that we will use to access the API through Kong.
 
-! [] (images / keycloak1.png)
-! [] (images / keycloak2.png)
+! [] (images/keycloak1.png)
+! [] (images/keycloak2.png)
 
 Pay attention to all the fields, or you may have problems later.
 
-! [] (images / keycloak3.png)
+! [] (images/keycloak3.png)
 
 We are also going to create a user, to access.
 # # KONGA
 Now is the time for KONGA (http: // localhost: 1337 /)
 Before starting and once you have entered the credential configuration data in konga, this screen will appear where we must enter:
 
-! [] (images / konga0.png)
+! [] (images/konga0.png)
 
 Next, we will create two services associated with our two microservices:
 
-! [] (images / konga1.png)
+! [] (images/konga1.png)
 Remember that we have two microservices called microservice1 and microservice2. The services associated with these must be created as specified in the image above.
 The following is inside the service, create the route (Again, pay special attention to the values)
 
 ! [] (images / konga2.png)
 For the authentication part, we are going to use this plugin, for that we are going to plugin and we do it here so that it affects all services.
 
-! [] (images / konga3.png)
+! [] (images/konga3.png)
 Add these two fields:
 (According to the realm where you have created the client in keycloak previously and your host_ip, which I say how to obtain it below)
 introspection_endpoint = http: // {HOST_IP}: 8180 / auth / realms / {REALM} / protocol / openid-connect / token / introspect \
 discovery = http: // {HOST_IP}: 8180 / auth / realms / {REALM} /.well-known/openid-configuration
 
-! [] (images / konga4.png)
+! [] (images/konga4.png)
 
 We cannot use the localhost ip, since from the kong container, it is not accessible, so we have to look for the ip that our keycloak service has, in this case inspecting the keycloak container we can find:
 
@@ -99,6 +99,6 @@ http: // {HOST_IP}: 8180 / auth / realms / {REALM} / protocol / openid-connect /
 [{"key": "username", "value": "yourUsername", "description": "", "type": "text", "enabled": true}, {"key": "password", " value ":" yourpassword "," description ":" "," type ":" text "," enabled ": true}, {" key ":" client_id "," value ":" myapp "," description ": "", "type": "text", "enabled": true}, {"key": "grant_type", "value": "password", "description": "", "type": "text", "enabled": true}, {"key": "client_secret", "value": "yourClientSecret", "description": "", "type": "text", "enabled": false}]
 
 
-! [] (images / konga5.png)
+! [] (images/konga5.png)
 
 Use it to make a
