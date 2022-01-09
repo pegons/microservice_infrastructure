@@ -11,7 +11,7 @@ https://github.com/pegons/microservice2
 
 ## Getting started
 
-- Once the three repos are at the same level, enter DDD_laravel_rabbitmq_template and execute:
+- Once the three repos are at the same level, enter to microservice_infrastructure folder and execute:
 
 - docker-compose build
 
