@@ -115,7 +115,7 @@ Get a bearer token:
 
 (Data for postman)
 ```http
-http://{HOST_IP}:8180/auth/realms/{REALM}/protocol/openid-connect/token
+POST http://{HOST_IP}:8180/auth/realms/{REALM}/protocol/openid-connect/token
 ```
 
 ```json
