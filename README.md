@@ -162,6 +162,6 @@ http://{HOST_IP}:8180/auth/realms/{REALM}/protocol/openid-connect/token
 
 Use it to make a request to KONG (127.0.0.1:8000) that if we are authenticated, it will redirect us to the corresponding microservice, just through the path:
 ``` http
-GET request to http://localhost:8000/microservice1/hello
+GET http://localhost:8000/microservice1/hello
 ```
 ![](images/konga6.png)
