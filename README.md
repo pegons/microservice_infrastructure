@@ -68,7 +68,7 @@ Remember that we have two microservices called microservice1 and microservice2. 
 
 The following is inside the service, create the route **(Again, pay special attention to the values)**.
 
-![](images / konga2.png)
+![](images/konga2.png)
 
 For the authentication part, we are going to use this plugin, for that we are going to plugin and we do it here so that it affects all services.
 
